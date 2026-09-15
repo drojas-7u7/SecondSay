@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     cloud_llm_provider: str = ""
     cloud_llm_api_key: SecretStr = SecretStr("")
     cloud_llm_model: str = ""
+    database_url: str = ""
 
 
 @lru_cache

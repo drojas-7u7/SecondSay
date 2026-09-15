@@ -20,3 +20,14 @@ def test_settings_accept_cloud_llm_configuration() -> None:
     assert settings.cloud_llm_provider == "groq"
     assert settings.cloud_llm_model == "openai/gpt-oss-20b"
     assert settings.cloud_llm_api_key.get_secret_value() == "test-key"
+
+def test_settings_accept_database_configuration() -> None:
+    settings = Settings(
+        database_url="postgresql+psycopg://secondsay:test-password@localhost:5432/secondsay",
+    )
+
+    assert (
+        settings.database_url
+        == "postgresql+psycopg://secondsay:test-password@localhost:5432/secondsay"
+    )
+
