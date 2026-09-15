@@ -58,3 +58,22 @@ def test_triage_decision_rejects_unexpected_fields() -> None:
             ),
             unexpected_field="No permitido",
         )
+
+
+def test_triage_decision_strips_surrounding_whitespace() -> None:
+    decision = TriageDecision(
+        category="  Daños por agua  ",
+        urgency=Urgency.HIGH,
+        summary="La fuga afecta vivienda vecina y requiere inspección urgente hoy",
+        department="  Siniestros  ",
+        justification=(
+            "  La decisión se basa únicamente en la información disponible del caso.\n"
+        ),
+    )
+
+    assert decision.category == "Daños por agua"
+    assert decision.department == "Siniestros"
+    assert (
+        decision.justification
+        == "La decisión se basa únicamente en la información disponible del caso."
+    )

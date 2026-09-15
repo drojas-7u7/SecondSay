@@ -11,7 +11,7 @@ class Urgency(StrEnum):
 
 
 class TriageDecision(BaseModel):
-    model_config = ConfigDict(strict=True, extra="forbid")
+    model_config = ConfigDict(strict=True, extra="forbid", str_strip_whitespace=True)
 
     category: str = Field(min_length=1)
     urgency: Urgency
