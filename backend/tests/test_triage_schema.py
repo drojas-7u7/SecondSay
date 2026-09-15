@@ -10,6 +10,7 @@ def test_valid_triage_decision() -> None:
         urgency=Urgency.HIGH,
         summary="Water leak affects neighbor property and requires urgent inspection today",
         department="Claims",
+            justification="The decision is based on the structured information provided in the case.",
     )
 
     assert decision.category == "Water damage"
@@ -23,6 +24,7 @@ def test_summary_requires_exactly_ten_words() -> None:
             urgency=Urgency.MEDIUM,
             summary="This summary has fewer than exactly ten required words",
             department="Claims",
+            justification="The decision is based on the structured information provided in the case.",
         )
 
 
@@ -33,4 +35,5 @@ def test_urgency_rejects_invalid_value() -> None:
             urgency="VERY_HIGH",
             summary="Water leak affects neighbor property and requires urgent inspection today",
             department="Claims",
+            justification="The decision is based on the structured information provided in the case.",
         )

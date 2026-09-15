@@ -1,16 +1,17 @@
 from app.providers.base import LLMProvider
-from app.schemas.case import CaseCreate
 from app.schemas.triage import TriageDecision, Urgency
 
 
 class FakeLLMProvider(LLMProvider):
-    def triage(self, case: CaseCreate) -> TriageDecision:
+    def generate(self, prompt: str) -> TriageDecision:
         return TriageDecision(
-            category="General incident",
+            category="Incidente general",
             urgency=Urgency.MEDIUM,
             summary=(
-                "Incoming case requires structured review before final "
-                "human validation today"
+                "El caso requiere revisión estructurada antes de validación humana final"
             ),
-            department="Claims",
+            department="Siniestros",
+            justification=(
+                "El caso necesita revisión estructurada antes de una decisión humana final."
+            ),
         )

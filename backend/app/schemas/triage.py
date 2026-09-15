@@ -4,10 +4,10 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class Urgency(StrEnum):
-    LOW = "LOW"
-    MEDIUM = "MEDIUM"
-    HIGH = "HIGH"
-    CRITICAL = "CRITICAL"
+    LOW = "BAJA"
+    MEDIUM = "MEDIA"
+    HIGH = "ALTA"
+    CRITICAL = "CRÍTICA"
 
 
 class TriageDecision(BaseModel):
@@ -17,6 +17,7 @@ class TriageDecision(BaseModel):
     urgency: Urgency
     summary: str
     department: str = Field(min_length=1)
+    justification: str = Field(min_length=1)
 
     @field_validator("summary")
     @classmethod
