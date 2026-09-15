@@ -9,7 +9,7 @@ class InputType(StrEnum):
 
 
 class CaseCreate(BaseModel):
-    model_config = ConfigDict(strict=True)
+    model_config = ConfigDict(extra="forbid")
 
     content: str = Field(min_length=1)
     input_type: InputType = InputType.TEXT
