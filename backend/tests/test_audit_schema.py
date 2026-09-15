@@ -2,6 +2,7 @@ import pytest
 from pydantic import ValidationError
 
 from app.schemas.audit import (
+    AuditRequest,
     AuditResult,
     ChangedField,
     DiscrepancyImpact,
@@ -85,3 +86,23 @@ def test_audit_result_accepts_discrepancy() -> None:
         ChangedField.URGENCY,
         ChangedField.DEPARTMENT,
     ]
+
+
+def test_audit_request_groups_ai_decision_and_human_review() -> None:
+    decision = build_ai_decision()
+
+    review = HumanReview(
+        final_category="Daños por agua",
+        final_urgency=Urgency.HIGH,
+        final_department="Responsabilidad Civil",
+        review_note="Existe afectación a terceros.",
+        discrepancy_impact=DiscrepancyImpact.HIGH,
+    )
+
+    request = AuditRequest(
+        ai_decision=decision,
+        human_review=review,
+    )
+
+    assert request.ai_decision == decision
+    assert request.human_review == review

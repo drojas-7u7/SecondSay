@@ -39,3 +39,10 @@ class AuditResult(BaseModel):
     ai_decision: TriageDecision
     human_review: HumanReview
 
+
+
+class AuditRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    ai_decision: TriageDecision
+    human_review: HumanReview
