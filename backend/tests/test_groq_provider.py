@@ -12,6 +12,40 @@ from app.providers.groq import (
 from app.schemas.triage import Urgency
 
 
+def build_success_response() -> httpx.Response:
+    content = json.dumps(
+        {
+            "category": "Daños por agua",
+            "urgency": "ALTA",
+            "summary": (
+                "La fuga afecta vivienda vecina y requiere inspección urgente hoy"
+            ),
+            "department": "Siniestros",
+            "justification": (
+                "La información disponible indica daños que requieren revisión prioritaria."
+            ),
+        },
+        ensure_ascii=False,
+    )
+
+    return httpx.Response(
+        status_code=200,
+        json={
+            "choices": [
+                {
+                    "message": {
+                        "content": content,
+                    }
+                }
+            ],
+            "usage": {
+                "prompt_tokens": 100,
+                "completion_tokens": 40,
+            },
+        },
+    )
+
+
 def test_groq_provider_returns_structured_result() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         assert str(request.url) == GROQ_CHAT_COMPLETIONS_URL
@@ -29,37 +63,7 @@ def test_groq_provider_returns_structured_result() -> None:
             is False
         )
 
-        content = json.dumps(
-            {
-                "category": "Daños por agua",
-                "urgency": "ALTA",
-                "summary": (
-                    "La fuga afecta vivienda vecina y requiere inspección urgente hoy"
-                ),
-                "department": "Siniestros",
-                "justification": (
-                    "La información disponible indica daños que requieren revisión prioritaria."
-                ),
-            },
-            ensure_ascii=False,
-        )
-
-        return httpx.Response(
-            status_code=200,
-            json={
-                "choices": [
-                    {
-                        "message": {
-                            "content": content,
-                        }
-                    }
-                ],
-                "usage": {
-                    "prompt_tokens": 100,
-                    "completion_tokens": 40,
-                },
-            },
-        )
+        return build_success_response()
 
     client = httpx.Client(transport=httpx.MockTransport(handler))
 
@@ -114,8 +118,78 @@ def test_groq_provider_rejects_invalid_structured_response() -> None:
         provider.generate("Caso de prueba")
 
 
-def test_groq_provider_handles_http_error() -> None:
+def test_groq_provider_retries_rate_limit_and_respects_retry_after() -> None:
+    attempts = 0
+    delays: list[float] = []
+
     def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal attempts
+        attempts += 1
+
+        if attempts == 1:
+            return httpx.Response(
+                status_code=429,
+                headers={"retry-after": "0.25"},
+                json={"error": {"message": "Rate limit exceeded"}},
+            )
+
+        return build_success_response()
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+
+    provider = GroqProvider(
+        api_key="test-key",
+        model=SUPPORTED_MODEL,
+        client=client,
+        sleeper=delays.append,
+    )
+
+    result = provider.generate("Caso de prueba")
+
+    assert result.decision.category == "Daños por agua"
+    assert attempts == 2
+    assert delays == [0.25]
+
+
+def test_groq_provider_uses_exponential_backoff_without_retry_after() -> None:
+    attempts = 0
+    delays: list[float] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal attempts
+        attempts += 1
+
+        if attempts == 1:
+            return httpx.Response(
+                status_code=503,
+                json={"error": {"message": "Service unavailable"}},
+            )
+
+        return build_success_response()
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+
+    provider = GroqProvider(
+        api_key="test-key",
+        model=SUPPORTED_MODEL,
+        client=client,
+        sleeper=delays.append,
+    )
+
+    provider.generate("Caso de prueba")
+
+    assert attempts == 2
+    assert delays == [0.5]
+
+
+def test_groq_provider_stops_after_maximum_attempts() -> None:
+    attempts = 0
+    delays: list[float] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal attempts
+        attempts += 1
+
         return httpx.Response(
             status_code=429,
             json={"error": {"message": "Rate limit exceeded"}},
@@ -127,7 +201,41 @@ def test_groq_provider_handles_http_error() -> None:
         api_key="test-key",
         model=SUPPORTED_MODEL,
         client=client,
+        sleeper=delays.append,
     )
 
     with pytest.raises(GroqProviderError):
         provider.generate("Caso de prueba")
+
+    assert attempts == 3
+    assert delays == [0.5, 1.0]
+
+
+def test_groq_provider_does_not_retry_unauthorized_request() -> None:
+    attempts = 0
+    delays: list[float] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal attempts
+        attempts += 1
+
+        return httpx.Response(
+            status_code=401,
+            json={"error": {"message": "Unauthorized"}},
+        )
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+
+    provider = GroqProvider(
+        api_key="test-key",
+        model=SUPPORTED_MODEL,
+        client=client,
+        sleeper=delays.append,
+    )
+
+    with pytest.raises(GroqProviderError):
+        provider.generate("Caso de prueba")
+
+    assert attempts == 1
+    assert delays == []
+

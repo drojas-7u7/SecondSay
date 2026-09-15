@@ -1,4 +1,5 @@
-from time import perf_counter
+from collections.abc import Callable
+from time import perf_counter, sleep
 
 import httpx
 
@@ -13,6 +14,10 @@ SUPPORTED_MODEL = "openai/gpt-oss-20b"
 INPUT_PRICE_USD_PER_MILLION = 0.075
 OUTPUT_PRICE_USD_PER_MILLION = 0.30
 
+MAX_ATTEMPTS = 3
+BASE_BACKOFF_SECONDS = 0.5
+RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
+
 
 class GroqProviderError(RuntimeError):
     """Raised when Groq cannot produce a valid triage result."""
@@ -24,6 +29,7 @@ class GroqProvider(LLMProvider):
         api_key: str,
         model: str,
         client: httpx.Client | None = None,
+        sleeper: Callable[[float], None] = sleep,
     ) -> None:
         if not api_key.strip():
             raise ValueError("Groq API key is required.")
@@ -37,6 +43,7 @@ class GroqProvider(LLMProvider):
         self.api_key = api_key
         self.model = model
         self.client = client or httpx.Client(timeout=30.0)
+        self.sleeper = sleeper
 
     def generate(self, prompt: str) -> LLMResult:
         payload = {
@@ -65,15 +72,10 @@ class GroqProvider(LLMProvider):
 
         started_at = perf_counter()
 
-        try:
-            response = self.client.post(
-                GROQ_CHAT_COMPLETIONS_URL,
-                headers=headers,
-                json=payload,
-            )
-            response.raise_for_status()
-        except httpx.HTTPError as exc:
-            raise GroqProviderError("Groq request failed.") from exc
+        response = self._post_with_retry(
+            headers=headers,
+            payload=payload,
+        )
 
         latency_ms = (perf_counter() - started_at) * 1000
 
@@ -109,3 +111,67 @@ class GroqProvider(LLMProvider):
             decision=decision,
             metrics=metrics,
         )
+
+    def _post_with_retry(
+        self,
+        *,
+        headers: dict[str, str],
+        payload: dict[str, object],
+    ) -> httpx.Response:
+        last_error: httpx.HTTPError | None = None
+
+        for attempt in range(MAX_ATTEMPTS):
+            try:
+                response = self.client.post(
+                    GROQ_CHAT_COMPLETIONS_URL,
+                    headers=headers,
+                    json=payload,
+                )
+                response.raise_for_status()
+                return response
+            except httpx.HTTPStatusError as exc:
+                last_error = exc
+
+                if (
+                    exc.response.status_code not in RETRYABLE_STATUS_CODES
+                    or attempt == MAX_ATTEMPTS - 1
+                ):
+                    break
+
+                self.sleeper(
+                    self._retry_delay_seconds(
+                        response=exc.response,
+                        attempt=attempt,
+                    )
+                )
+            except httpx.RequestError as exc:
+                last_error = exc
+
+                if attempt == MAX_ATTEMPTS - 1:
+                    break
+
+                self.sleeper(self._exponential_backoff(attempt))
+
+        raise GroqProviderError("Groq request failed.") from last_error
+
+    @staticmethod
+    def _exponential_backoff(attempt: int) -> float:
+        return BASE_BACKOFF_SECONDS * (2**attempt)
+
+    @classmethod
+    def _retry_delay_seconds(
+        cls,
+        *,
+        response: httpx.Response,
+        attempt: int,
+    ) -> float:
+        retry_after = response.headers.get("retry-after")
+
+        if retry_after is not None:
+            try:
+                return max(float(retry_after), 0.0)
+            except ValueError:
+                pass
+
+        return cls._exponential_backoff(attempt)
+
