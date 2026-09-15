@@ -100,9 +100,11 @@ def test_audit_request_groups_ai_decision_and_human_review() -> None:
     )
 
     request = AuditRequest(
-        ai_decision=decision,
+        ai_decision=decision.model_dump(mode="json"),
         human_review=review,
     )
 
-    assert request.ai_decision == decision
+    assert request.ai_decision.category == decision.category
+    assert request.ai_decision.urgency == decision.urgency
+    assert request.ai_decision.department == decision.department
     assert request.human_review == review

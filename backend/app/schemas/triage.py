@@ -30,3 +30,11 @@ class TriageDecision(BaseModel):
             )
 
         return value
+
+
+class TriageDecisionInput(TriageDecision):
+    model_config = ConfigDict(
+        strict=False,
+        extra="forbid",
+        str_strip_whitespace=True,
+    )
