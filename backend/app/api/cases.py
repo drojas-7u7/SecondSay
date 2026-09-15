@@ -1,16 +1,13 @@
 from fastapi import APIRouter
 
 from app.schemas.case import CaseCreate
-from app.schemas.triage import TriageDecision, Urgency
+from app.schemas.triage import TriageDecision
+from app.services.triage import TriageService
 
 router = APIRouter(prefix="/api/v1/cases", tags=["Cases"])
+triage_service = TriageService()
 
 
 @router.post("/triage", response_model=TriageDecision)
 def triage_case(case: CaseCreate) -> TriageDecision:
-    return TriageDecision(
-        category="General incident",
-        urgency=Urgency.MEDIUM,
-        summary="Incoming case requires structured review before final human validation today",
-        department="Claims",
-    )
+    return triage_service.triage(case)
