@@ -1,6 +1,6 @@
 from app.providers.base import LLMProvider
 from app.schemas.case import CaseCreate
-from app.schemas.triage import TriageDecision
+from app.schemas.llm import LLMResult
 from app.services.prompt_builder import PromptBuilder
 
 
@@ -13,6 +13,6 @@ class TriageService:
         self.provider = provider
         self.prompt_builder = prompt_builder
 
-    def triage(self, case: CaseCreate) -> TriageDecision:
+    def triage(self, case: CaseCreate) -> LLMResult:
         prompt = self.prompt_builder.build(case)
         return self.provider.generate(prompt)

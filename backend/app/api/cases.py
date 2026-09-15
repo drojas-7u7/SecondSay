@@ -2,7 +2,7 @@ from fastapi import APIRouter
 
 from app.providers.fake import FakeLLMProvider
 from app.schemas.case import CaseCreate
-from app.schemas.triage import TriageDecision
+from app.schemas.llm import LLMResult
 from app.services.prompt_builder import PromptBuilder
 from app.services.triage import TriageService
 
@@ -16,6 +16,6 @@ triage_service = TriageService(
 )
 
 
-@router.post("/triage", response_model=TriageDecision)
-def triage_case(case: CaseCreate) -> TriageDecision:
+@router.post("/triage", response_model=LLMResult)
+def triage_case(case: CaseCreate) -> LLMResult:
     return triage_service.triage(case)

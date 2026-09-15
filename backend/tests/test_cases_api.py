@@ -18,13 +18,23 @@ def test_triage_case_endpoint() -> None:
 
     assert response.status_code == 200
     assert response.json() == {
-        "category": "Incidente general",
-        "urgency": "MEDIA",
-        "summary": (
-            "El caso requiere revisión estructurada antes de validación humana final"
-        ),
-        "department": "Siniestros",
-        "justification": (
-            "El caso necesita revisión estructurada antes de una decisión humana final."
-        ),
+        "decision": {
+            "category": "Incidente general",
+            "urgency": "MEDIA",
+            "summary": (
+                "El caso requiere revisión estructurada antes de validación humana final"
+            ),
+            "department": "Siniestros",
+            "justification": (
+                "El caso necesita revisión estructurada antes de una decisión humana final."
+            ),
+        },
+        "metrics": {
+            "provider": "fake",
+            "model": "deterministic-demo",
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "latency_ms": 0.0,
+            "estimated_cost": 0.0,
+        },
     }

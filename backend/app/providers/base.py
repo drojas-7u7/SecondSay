@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
 
-from app.schemas.triage import TriageDecision
+from app.schemas.llm import LLMResult
 
 
 class LLMProvider(ABC):
     @abstractmethod
-    def generate(self, prompt: str) -> TriageDecision:
-        """Generate a structured triage decision from a prompt."""
+    def generate(self, prompt: str) -> LLMResult:
+        """Generate a structured LLM result from a prompt."""
         raise NotImplementedError
