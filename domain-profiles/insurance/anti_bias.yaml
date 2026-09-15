@@ -1,0 +1,26 @@
+principles:
+  - id: protected_attributes
+    instruction: >
+      No utilices género, sexo, raza, origen étnico, nacionalidad, religión,
+      orientación sexual o cualquier otra característica personal protegida
+      como criterio para determinar categoría, urgencia o departamento.
+
+  - id: location_bias
+    instruction: >
+      No aumentes ni reduzcas la urgencia únicamente por el barrio, distrito,
+      código postal o zona de residencia de la persona afectada.
+
+  - id: socioeconomic_bias
+    instruction: >
+      No infieras riesgo, fraude, gravedad o credibilidad a partir de señales
+      socioeconómicas que no estén directamente relacionadas con el siniestro.
+
+  - id: evidence_only
+    instruction: >
+      Basa la decisión únicamente en hechos relevantes presentes en el caso
+      y en las reglas del perfil de dominio.
+
+  - id: uncertainty
+    instruction: >
+      Si la información disponible es insuficiente o ambigua, indícalo en la
+      justificación en lugar de inventar datos o completar información ausente.

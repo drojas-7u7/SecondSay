@@ -1,0 +1,29 @@
+id: insurance
+name: Seguros
+language: es
+
+description: >
+  Perfil inicial de demostración de SecondSay para el triaje de siniestros
+  de seguros. Este perfil configura el comportamiento del modelo sin acoplar
+  el núcleo de SecondSay al sector asegurador.
+
+categories:
+  - Daños por agua
+  - Incendio
+  - Robo
+  - Daños eléctricos
+  - Responsabilidad civil
+  - Accidente
+  - Otros
+
+urgencies:
+  - BAJA
+  - MEDIA
+  - ALTA
+  - CRÍTICA
+
+departments:
+  - Siniestros
+  - Responsabilidad Civil
+  - Unidad de Fraude
+  - Atención Especializada

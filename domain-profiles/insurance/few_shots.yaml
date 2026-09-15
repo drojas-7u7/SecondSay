@@ -1,0 +1,38 @@
+examples:
+  - input: >
+      Se ha producido una fuga de agua en la cocina. El agua ha causado
+      daños en el mobiliario y también ha alcanzado la vivienda del vecino
+      situada en la planta inferior.
+    output:
+      category: Daños por agua
+      urgency: ALTA
+      summary: Fuga de agua causa daños propios y a terceros afectados
+      department: Responsabilidad Civil
+      justification: >
+        Existen daños por agua con afectación a una tercera persona, por lo
+        que el caso requiere una revisión prioritaria y especializada.
+
+  - input: >
+      Se ha declarado un incendio en una vivienda con presencia abundante
+      de humo. Los residentes están siendo evacuados y existe riesgo de
+      propagación a otras zonas del edificio.
+    output:
+      category: Incendio
+      urgency: CRÍTICA
+      summary: Incendio activo con humo obliga evacuación inmediata de residentes afectados
+      department: Atención Especializada
+      justification: >
+        Existe un riesgo inmediato para personas y posibilidad de propagación,
+        lo que exige la máxima prioridad de revisión.
+
+  - input: >
+      El asegurado comunica un robo en su vivienda durante su ausencia.
+      No existen personas heridas y se informa de varios objetos sustraídos.
+    output:
+      category: Robo
+      urgency: MEDIA
+      summary: Robo en vivienda sin heridos requiere revisión especializada del siniestro
+      department: Siniestros
+      justification: >
+        Se trata de un robo sin riesgo inmediato para personas, pero requiere
+        revisión del siniestro y de la documentación disponible.

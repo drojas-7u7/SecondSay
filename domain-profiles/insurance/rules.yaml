@@ -1,0 +1,43 @@
+rules:
+  - id: water_third_party
+    description: >
+      Si un siniestro por agua afecta también a terceras personas o a otra
+      vivienda, aumentar la prioridad de revisión.
+    signals:
+      - fuga de agua
+      - daños por agua
+      - vecino
+      - vivienda vecina
+      - terceros afectados
+
+  - id: fire_high_risk
+    description: >
+      Los casos relacionados con incendio requieren una revisión prioritaria,
+      especialmente si existe riesgo para personas o propagación.
+    signals:
+      - incendio
+      - humo
+      - llamas
+      - evacuación
+      - riesgo para personas
+
+  - id: theft_special_review
+    description: >
+      Los casos de robo deben enviarse a revisión especializada cuando existan
+      indicios que requieran comprobaciones adicionales.
+    signals:
+      - robo
+      - sustracción
+      - allanamiento
+      - objetos desaparecidos
+
+  - id: critical_safety
+    description: >
+      Cualquier caso con riesgo inmediato para personas debe tratarse con la
+      máxima prioridad disponible.
+    signals:
+      - heridos
+      - atrapados
+      - peligro inmediato
+      - riesgo vital
+      - evacuación
