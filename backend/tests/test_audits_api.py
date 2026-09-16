@@ -114,3 +114,31 @@ def test_review_ai_decision_endpoint_returns_404_for_unknown_decision() -> None:
     assert response.json() == {
         "detail": "No se encontró la decisión de IA indicada."
     }
+
+
+def test_review_ai_decision_endpoint_returns_422_for_missing_discrepancy_impact() -> None:
+    ai_decision_id = create_persisted_decision()
+    app.dependency_overrides[get_db_session] = override_db_session
+
+    try:
+        response = client.post(
+            "/api/v1/audits/review",
+            json={
+                "ai_decision_id": ai_decision_id,
+                "human_review": {
+                    "final_category": "Incidente general",
+                    "final_urgency": "ALTA",
+                    "final_department": "Siniestros",
+                    "discrepancy_impact": None,
+                },
+            },
+        )
+    finally:
+        app.dependency_overrides.pop(get_db_session, None)
+
+    assert response.status_code == 422
+    assert response.json() == {
+        "detail": (
+            "La revisión humana tiene un impacto de discrepancia incoherente."
+        )
+    }
