@@ -1,4 +1,5 @@
 from decimal import Decimal
+from uuid import UUID
 
 from sqlalchemy.orm import Session
 
@@ -44,3 +45,11 @@ class CaseRepository:
         session.flush()
 
         return case_record, decision_record
+
+    def get_decision(
+        self,
+        session: Session,
+        ai_decision_id: UUID,
+    ) -> AIDecisionRecord | None:
+        return session.get(AIDecisionRecord, ai_decision_id)
+

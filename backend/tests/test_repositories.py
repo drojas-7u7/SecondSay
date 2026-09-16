@@ -114,3 +114,28 @@ def test_audit_repository_persists_human_review() -> None:
         assert stored_audit.discrepancy_impact == "ALTO"
 
     engine.dispose()
+
+
+def test_case_repository_gets_ai_decision_by_id() -> None:
+    engine = create_engine("sqlite+pysqlite:///:memory:")
+    Base.metadata.create_all(engine)
+
+    with Session(engine) as session:
+        _, decision_record = CaseRepository().create_with_decision(
+            session=session,
+            case=CaseCreate(content="Hay una fuga de agua en la cocina."),
+            result=build_llm_result(),
+        )
+        session.commit()
+
+        stored_decision = CaseRepository().get_decision(
+            session=session,
+            ai_decision_id=decision_record.id,
+        )
+
+        assert stored_decision is not None
+        assert stored_decision.id == decision_record.id
+        assert stored_decision.category == "Daños por agua"
+
+    engine.dispose()
+

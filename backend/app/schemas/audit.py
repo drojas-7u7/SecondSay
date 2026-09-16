@@ -1,8 +1,9 @@
 from enum import StrEnum
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.schemas.triage import TriageDecision, TriageDecisionInput, Urgency
+from app.schemas.triage import TriageDecision, Urgency
 
 
 class DiscrepancyImpact(StrEnum):
@@ -44,5 +45,5 @@ class AuditResult(BaseModel):
 class AuditRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    ai_decision: TriageDecisionInput
+    ai_decision_id: UUID
     human_review: HumanReview

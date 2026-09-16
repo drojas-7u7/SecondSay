@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 import pytest
 from pydantic import ValidationError
 
@@ -88,8 +90,8 @@ def test_audit_result_accepts_discrepancy() -> None:
     ]
 
 
-def test_audit_request_groups_ai_decision_and_human_review() -> None:
-    decision = build_ai_decision()
+def test_audit_request_groups_decision_id_and_human_review() -> None:
+    ai_decision_id = uuid4()
 
     review = HumanReview(
         final_category="Daños por agua",
@@ -100,11 +102,9 @@ def test_audit_request_groups_ai_decision_and_human_review() -> None:
     )
 
     request = AuditRequest(
-        ai_decision=decision.model_dump(mode="json"),
+        ai_decision_id=ai_decision_id,
         human_review=review,
     )
 
-    assert request.ai_decision.category == decision.category
-    assert request.ai_decision.urgency == decision.urgency
-    assert request.ai_decision.department == decision.department
+    assert request.ai_decision_id == ai_decision_id
     assert request.human_review == review
