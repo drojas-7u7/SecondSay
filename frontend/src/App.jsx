@@ -1,0 +1,391 @@
+import { useState } from 'react'
+import './App.css'
+
+const urgencyOptions = ['BAJA', 'MEDIA', 'ALTA', 'CRÍTICA']
+const impactOptions = ['BAJO', 'MEDIO', 'ALTO', 'CRÍTICO']
+
+function App() {
+  const [content, setContent] = useState('')
+  const [result, setResult] = useState(null)
+  const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+
+  const [finalCategory, setFinalCategory] = useState('')
+  const [finalUrgency, setFinalUrgency] = useState('')
+  const [finalDepartment, setFinalDepartment] = useState('')
+  const [reviewNote, setReviewNote] = useState('')
+  const [discrepancyImpact, setDiscrepancyImpact] = useState('')
+  const [auditResult, setAuditResult] = useState(null)
+  const [auditError, setAuditError] = useState('')
+  const [isReviewing, setIsReviewing] = useState(false)
+
+  const hasReviewDiscrepancy =
+    result !== null &&
+    (finalCategory.trim() !== result.decision.category ||
+      finalUrgency !== result.decision.urgency ||
+      finalDepartment.trim() !== result.decision.department)
+
+  async function handleSubmit(event) {
+    event.preventDefault()
+
+    if (!content.trim()) {
+      setError('Introduce una descripción del caso.')
+      return
+    }
+
+    setIsLoading(true)
+    setError('')
+    setResult(null)
+    setAuditResult(null)
+    setAuditError('')
+
+    try {
+      const response = await fetch('/api/v1/cases/triage', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ content: content.trim() }),
+      })
+
+      if (!response.ok) {
+        throw new Error('No se pudo analizar el caso.')
+      }
+
+      const data = await response.json()
+
+      setResult(data)
+      setFinalCategory(data.decision.category)
+      setFinalUrgency(data.decision.urgency)
+      setFinalDepartment(data.decision.department)
+      setReviewNote('')
+      setDiscrepancyImpact('')
+    } catch {
+      setError(
+        'No se pudo conectar con SecondSay. Comprueba que el backend está disponible.',
+      )
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  async function handleReviewSubmit(event) {
+    event.preventDefault()
+
+    if (!result) {
+      return
+    }
+
+    if (!finalCategory.trim() || !finalUrgency || !finalDepartment.trim()) {
+      setAuditError('Completa los campos obligatorios de la revisión.')
+      return
+    }
+
+    if (hasReviewDiscrepancy && !discrepancyImpact) {
+      setAuditError(
+        'Indica el impacto de la discrepancia antes de guardar la revisión.',
+      )
+      return
+    }
+
+    setIsReviewing(true)
+    setAuditError('')
+    setAuditResult(null)
+
+    try {
+      const response = await fetch('/api/v1/audits/review', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ai_decision_id: result.ai_decision_id,
+          human_review: {
+            final_category: finalCategory.trim(),
+            final_urgency: finalUrgency,
+            final_department: finalDepartment.trim(),
+            review_note: reviewNote.trim() || null,
+            discrepancy_impact: hasReviewDiscrepancy
+              ? discrepancyImpact
+              : null,
+          },
+        }),
+      })
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => null)
+
+        throw new Error(
+          body?.detail || 'No se pudo registrar la revisión humana.',
+        )
+      }
+
+      const data = await response.json()
+      setAuditResult(data)
+    } catch (reviewError) {
+      setAuditError(reviewError.message)
+    } finally {
+      setIsReviewing(false)
+    }
+  }
+
+  return (
+    <main className="app-shell">
+      <header className="app-header">
+        <div>
+          <p className="eyebrow">AI Decision Audit</p>
+          <h1>SecondSay</h1>
+          <p className="subtitle">
+            Audita decisiones de inteligencia artificial con supervisión humana.
+          </p>
+        </div>
+        <span className="status-badge">Auditoría continua</span>
+      </header>
+
+      <section className="workspace">
+        <div className="panel">
+          <div className="section-heading">
+            <span className="step">01</span>
+            <div>
+              <h2>Nuevo caso</h2>
+              <p>Describe el incidente que debe evaluar el sistema de IA.</p>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit}>
+            <label htmlFor="case-content">Descripción del caso</label>
+            <textarea
+              id="case-content"
+              value={content}
+              onChange={(event) => setContent(event.target.value)}
+              placeholder="Ej. Se ha roto una tubería en la cocina y el agua está llegando al piso inferior."
+              rows="8"
+            />
+
+            {error && <p className="error-message">{error}</p>}
+
+            <button type="submit" disabled={isLoading}>
+              {isLoading ? 'Analizando caso…' : 'Analizar con IA'}
+            </button>
+          </form>
+        </div>
+
+        <div className="panel result-panel">
+          <div className="section-heading">
+            <span className="step">02</span>
+            <div>
+              <h2>Decisión de IA</h2>
+              <p>Resultado estructurado y métricas de la ejecución.</p>
+            </div>
+          </div>
+
+          {!result && (
+            <div className="empty-state">
+              <p>La decisión aparecerá aquí después de analizar un caso.</p>
+            </div>
+          )}
+
+          {result && (
+            <>
+              <div className="decision-grid">
+                <article>
+                  <span>Categoría</span>
+                  <strong>{result.decision.category}</strong>
+                </article>
+                <article>
+                  <span>Urgencia</span>
+                  <strong>{result.decision.urgency}</strong>
+                </article>
+                <article>
+                  <span>Departamento</span>
+                  <strong>{result.decision.department}</strong>
+                </article>
+              </div>
+
+              <div className="decision-copy">
+                <h3>Resumen</h3>
+                <p>{result.decision.summary}</p>
+
+                <h3>Justificación</h3>
+                <p>{result.decision.justification}</p>
+              </div>
+
+              <div className="metrics">
+                <div>
+                  <span>Proveedor</span>
+                  <strong>{result.metrics.provider}</strong>
+                </div>
+                <div>
+                  <span>Modelo</span>
+                  <strong>{result.metrics.model}</strong>
+                </div>
+                <div>
+                  <span>Latencia</span>
+                  <strong>{Math.round(result.metrics.latency_ms)} ms</strong>
+                </div>
+                <div>
+                  <span>Tokens</span>
+                  <strong>
+                    {result.metrics.input_tokens + result.metrics.output_tokens}
+                  </strong>
+                </div>
+                <div>
+                  <span>Coste teórico</span>
+                  <strong>${result.metrics.estimated_cost.toFixed(6)}</strong>
+                  <small className="metric-note">
+                    Tarifa de referencia del proveedor
+                  </small>
+                </div>
+              </div>
+
+              <p className="trace-id">
+                Decisión: <code>{result.ai_decision_id}</code>
+              </p>
+            </>
+          )}
+        </div>
+      </section>
+
+      {result && (
+        <section className="audit-workspace">
+          <div className="panel">
+            <div className="section-heading">
+              <span className="step">03</span>
+              <div>
+                <h2>Revisión humana</h2>
+                <p>
+                  Confirma la decisión o modifica los campos que requieran
+                  criterio humano.
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleReviewSubmit}>
+              <label htmlFor="final-category">Categoría final</label>
+              <input
+                id="final-category"
+                value={finalCategory}
+                onChange={(event) => setFinalCategory(event.target.value)}
+              />
+
+              <label htmlFor="final-urgency">Urgencia final</label>
+              <select
+                id="final-urgency"
+                value={finalUrgency}
+                onChange={(event) => setFinalUrgency(event.target.value)}
+              >
+                {urgencyOptions.map((urgency) => (
+                  <option key={urgency} value={urgency}>
+                    {urgency}
+                  </option>
+                ))}
+              </select>
+
+              <label htmlFor="final-department">Departamento final</label>
+              <input
+                id="final-department"
+                value={finalDepartment}
+                onChange={(event) => setFinalDepartment(event.target.value)}
+              />
+
+              <label htmlFor="review-note">Nota de revisión</label>
+              <textarea
+                id="review-note"
+                value={reviewNote}
+                onChange={(event) => setReviewNote(event.target.value)}
+                placeholder="Añade contexto si resulta útil para la auditoría."
+                rows="4"
+              />
+
+              <label htmlFor="discrepancy-impact">
+                Impacto de la discrepancia
+              </label>
+              <select
+                id="discrepancy-impact"
+                value={discrepancyImpact}
+                onChange={(event) => setDiscrepancyImpact(event.target.value)}
+                disabled={!hasReviewDiscrepancy}
+              >
+                <option value="">
+                  {hasReviewDiscrepancy
+                    ? 'Selecciona un impacto'
+                    : 'Sin discrepancia'}
+                </option>
+                {impactOptions.map((impact) => (
+                  <option key={impact} value={impact}>
+                    {impact}
+                  </option>
+                ))}
+              </select>
+
+              {auditError && <p className="error-message">{auditError}</p>}
+
+              <button type="submit" disabled={isReviewing}>
+                {isReviewing ? 'Registrando revisión…' : 'Registrar revisión'}
+              </button>
+            </form>
+          </div>
+
+          <div className="panel">
+            <div className="section-heading">
+              <span className="step">04</span>
+              <div>
+                <h2>Resultado de auditoría</h2>
+                <p>
+                  SecondSay registra la diferencia sin asumir automáticamente
+                  que la IA se haya equivocado.
+                </p>
+              </div>
+            </div>
+
+            {!auditResult && (
+              <div className="empty-state">
+                <p>
+                  El resultado aparecerá aquí después de registrar la revisión
+                  humana.
+                </p>
+              </div>
+            )}
+
+            {auditResult && (
+              <div className="audit-result">
+                <div className="audit-summary">
+                  <span>Estado</span>
+                  <strong>
+                    {auditResult.has_discrepancy
+                      ? 'Discrepancia detectada'
+                      : 'Sin discrepancias'}
+                  </strong>
+                </div>
+
+                <div className="audit-summary">
+                  <span>Campos modificados</span>
+                  <strong>
+                    {auditResult.changed_fields.length > 0
+                      ? auditResult.changed_fields.join(', ')
+                      : 'Ninguno'}
+                  </strong>
+                </div>
+
+                <div className="audit-summary">
+                  <span>Impacto registrado</span>
+                  <strong>
+                    {auditResult.human_review.discrepancy_impact || 'No aplica'}
+                  </strong>
+                </div>
+
+                <p className="audit-message">
+                  Una discrepancia representa una diferencia entre la propuesta
+                  de IA y la decisión humana final. No implica por sí sola un
+                  error del modelo.
+                </p>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+    </main>
+  )
+}
+
+export default App
