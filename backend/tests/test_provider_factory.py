@@ -53,3 +53,19 @@ def test_provider_factory_rejects_unknown_provider() -> None:
 
     with pytest.raises(ValueError):
         build_llm_provider(settings)
+
+
+def test_provider_factory_builds_local_provider() -> None:
+    settings = Settings(
+        llm_mode="local",
+        cloud_llm_provider="",
+        cloud_llm_api_key=SecretStr(""),
+        cloud_llm_model="",
+        local_llm_provider="ollama",
+        local_llm_model="qwen3:4b-instruct",
+        local_llm_base_url="http://127.0.0.1:11434",
+    )
+
+    provider = build_llm_provider(settings)
+
+    assert provider.__class__.__name__ == "OllamaProvider"

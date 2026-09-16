@@ -31,3 +31,17 @@ def test_settings_accept_database_configuration() -> None:
         == "postgresql+psycopg://secondsay:test-password@localhost:5432/secondsay"
     )
 
+
+
+def test_settings_accept_local_llm_configuration() -> None:
+    settings = Settings(
+        llm_mode="local",
+        local_llm_provider="ollama",
+        local_llm_model="qwen3:4b-instruct",
+        local_llm_base_url="http://127.0.0.1:11434",
+    )
+
+    assert settings.llm_mode == "local"
+    assert settings.local_llm_provider == "ollama"
+    assert settings.local_llm_model == "qwen3:4b-instruct"
+    assert settings.local_llm_base_url == "http://127.0.0.1:11434"

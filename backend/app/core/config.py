@@ -15,9 +15,16 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    llm_mode: str = "cloud"
+
     cloud_llm_provider: str = ""
     cloud_llm_api_key: SecretStr = SecretStr("")
     cloud_llm_model: str = ""
+
+    local_llm_provider: str = "ollama"
+    local_llm_model: str = ""
+    local_llm_base_url: str = "http://127.0.0.1:11434"
+
     database_url: str = ""
 
 
