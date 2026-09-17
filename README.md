@@ -494,6 +494,14 @@ Vista general de la arquitectura modular de SecondSay:
 
 ![Arquitectura de SecondSay](docs/screenshots/03-architecture.png)
 
+### Comparativa cloud vs local
+
+Comparación agregada entre Groq y Ollama en ejecuciones, latencia, coste de API
+y discrepancia observada tras revisión humana:
+
+![Comparativa cloud vs local de SecondSay](docs/screenshots/04-cloud-local-comparison.png)
+
+
 ## Roadmap
 
 Las siguientes capacidades forman parte de la evolución prevista y **no deben considerarse implementadas actualmente**:
