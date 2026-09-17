@@ -1,0 +1,15 @@
+# SecondSay backend runtime dependencies
+fastapi
+uvicorn[standard]
+pydantic>=2
+pydantic-settings
+sqlalchemy>=2
+psycopg[binary]
+alembic
+httpx
+pyyaml
+
+# Development, testing and quality
+pytest
+pytest-asyncio
+ruff
