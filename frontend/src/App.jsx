@@ -1,8 +1,18 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import './App.css'
 
 const urgencyOptions = ['BAJA', 'MEDIA', 'ALTA', 'CRÍTICA']
 const impactOptions = ['BAJO', 'MEDIO', 'ALTO', 'CRÍTICO']
+
+async function fetchHistory() {
+  const response = await fetch('/api/v1/cases/history')
+
+  if (!response.ok) {
+    throw new Error('No se pudo cargar el histórico.')
+  }
+
+  return response.json()
+}
 
 function App() {
   const [content, setContent] = useState('')
@@ -18,6 +28,50 @@ function App() {
   const [auditResult, setAuditResult] = useState(null)
   const [auditError, setAuditError] = useState('')
   const [isReviewing, setIsReviewing] = useState(false)
+
+  const [history, setHistory] = useState([])
+  const [historyError, setHistoryError] = useState('')
+  const [isHistoryLoading, setIsHistoryLoading] = useState(true)
+
+  const loadHistory = useCallback(async () => {
+    try {
+      const data = await fetchHistory()
+      setHistory(data)
+      setHistoryError('')
+    } catch {
+      setHistoryError(
+        'No se pudo cargar el histórico de auditoría.',
+      )
+    } finally {
+      setIsHistoryLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    let isCancelled = false
+
+    fetchHistory()
+      .then((data) => {
+        if (!isCancelled) {
+          setHistory(data)
+          setHistoryError('')
+        }
+      })
+      .catch(() => {
+        if (!isCancelled) {
+          setHistoryError('No se pudo cargar el histórico de auditoría.')
+        }
+      })
+      .finally(() => {
+        if (!isCancelled) {
+          setIsHistoryLoading(false)
+        }
+      })
+
+    return () => {
+      isCancelled = true
+    }
+  }, [])
 
   const hasReviewDiscrepancy =
     result !== null &&
@@ -60,6 +114,7 @@ function App() {
       setFinalDepartment(data.decision.department)
       setReviewNote('')
       setDiscrepancyImpact('')
+      await loadHistory()
     } catch {
       setError(
         'No se pudo conectar con SecondSay. Comprueba que el backend está disponible.',
@@ -122,6 +177,7 @@ function App() {
 
       const data = await response.json()
       setAuditResult(data)
+      await loadHistory()
     } catch (reviewError) {
       setAuditError(reviewError.message)
     } finally {
@@ -396,6 +452,118 @@ function App() {
           </div>
         </section>
       )}
+
+      <section className="history-section">
+        <div className="panel">
+          <div className="history-heading">
+            <div>
+              <p className="eyebrow">Trazabilidad</p>
+              <h2>Histórico de auditoría</h2>
+              <p>
+                Decisiones recientes, proveedor utilizado y resultado de la
+                última revisión humana registrada.
+              </p>
+            </div>
+            <span className="history-count">
+              {history.length} {history.length === 1 ? 'decisión' : 'decisiones'}
+            </span>
+          </div>
+
+          {isHistoryLoading && (
+            <div className="history-state">
+              <p>Cargando histórico…</p>
+            </div>
+          )}
+
+          {historyError && <p className="error-message">{historyError}</p>}
+
+          {!isHistoryLoading && !historyError && history.length === 0 && (
+            <div className="history-state">
+              <p>
+                Todavía no hay decisiones persistidas para mostrar.
+              </p>
+            </div>
+          )}
+
+          {!isHistoryLoading && !historyError && history.length > 0 && (
+            <div className="history-table-wrapper">
+              <table className="history-table">
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Proveedor / modelo</th>
+                    <th>Decisión IA</th>
+                    <th>Ejecución</th>
+                    <th>Última auditoría</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {history.map((item) => (
+                    <tr key={item.ai_decision_id}>
+                      <td>
+                        <strong>
+                          {new Date(item.created_at).toLocaleDateString('es-ES')}
+                        </strong>
+                        <small>
+                          {new Date(item.created_at).toLocaleTimeString(
+                            'es-ES',
+                            {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            },
+                          )}
+                        </small>
+                      </td>
+                      <td>
+                        <strong>{item.provider}</strong>
+                        <small>{item.model}</small>
+                      </td>
+                      <td>
+                        <strong>{item.category}</strong>
+                        <small>
+                          {item.urgency} · {item.department}
+                        </small>
+                      </td>
+                      <td>
+                        <strong>{Math.round(item.latency_ms)} ms</strong>
+                        <small>
+                          {item.provider === 'ollama'
+                            ? 'Sin coste de API'
+                            : `$${item.estimated_cost.toFixed(6)}`}
+                        </small>
+                      </td>
+                      <td>
+                        {item.has_discrepancy === null ? (
+                          <>
+                            <strong>Pendiente de revisión</strong>
+                            <small>Sin auditoría humana registrada</small>
+                          </>
+                        ) : item.has_discrepancy ? (
+                          <>
+                            <strong>
+                              Discrepancia · {item.discrepancy_impact}
+                            </strong>
+                            <small>
+                              {item.changed_fields.length > 0
+                                ? item.changed_fields.join(', ')
+                                : 'Sin campos registrados'}
+                            </small>
+                          </>
+                        ) : (
+                          <>
+                            <strong>Sin discrepancias</strong>
+                            <small>Decisión confirmada por revisión humana</small>
+                          </>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </section>
     </main>
   )
 }
