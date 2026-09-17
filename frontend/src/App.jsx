@@ -230,11 +230,23 @@ function App() {
                   </strong>
                 </div>
                 <div>
-                  <span>Coste teórico</span>
-                  <strong>${result.metrics.estimated_cost.toFixed(6)}</strong>
-                  <small className="metric-note">
-                    Tarifa de referencia del proveedor
-                  </small>
+                  {result.metrics.provider === "ollama" ? (
+                    <>
+                      <span>Coste de API</span>
+                      <strong>Sin coste de API</strong>
+                      <small className="metric-note">
+                        No incluye hardware ni consumo energético
+                      </small>
+                    </>
+                  ) : (
+                    <>
+                      <span>Coste teórico</span>
+                      <strong>${result.metrics.estimated_cost.toFixed(6)}</strong>
+                      <small className="metric-note">
+                        Tarifa de referencia del proveedor
+                      </small>
+                    </>
+                  )}
                 </div>
               </div>
 
