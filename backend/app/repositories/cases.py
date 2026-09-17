@@ -1,9 +1,10 @@
 from decimal import Decimal
 from uuid import UUID
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import AIDecisionRecord, CaseRecord
+from app.models import AIDecisionRecord, AuditRecord, CaseRecord
 from app.schemas.case import CaseCreate
 from app.schemas.llm import LLMResult
 
@@ -52,4 +53,42 @@ class CaseRepository:
         ai_decision_id: UUID,
     ) -> AIDecisionRecord | None:
         return session.get(AIDecisionRecord, ai_decision_id)
+
+    def get_history(
+        self,
+        session: Session,
+    ) -> list[tuple[CaseRecord, AIDecisionRecord, AuditRecord | None]]:
+        latest_audit_id = (
+            select(AuditRecord.id)
+            .where(AuditRecord.ai_decision_id == AIDecisionRecord.id)
+            .order_by(
+                AuditRecord.created_at.desc(),
+                AuditRecord.id.desc(),
+            )
+            .limit(1)
+            .correlate(AIDecisionRecord)
+            .scalar_subquery()
+        )
+
+        statement = (
+            select(
+                CaseRecord,
+                AIDecisionRecord,
+                AuditRecord,
+            )
+            .join(
+                AIDecisionRecord,
+                AIDecisionRecord.case_id == CaseRecord.id,
+            )
+            .outerjoin(
+                AuditRecord,
+                AuditRecord.id == latest_audit_id,
+            )
+            .order_by(AIDecisionRecord.created_at.desc())
+        )
+
+        return [
+            (case, decision, audit)
+            for case, decision, audit in session.execute(statement).all()
+        ]
 
