@@ -104,6 +104,31 @@ Señalar también el UUID de la decisión.
 
 ---
 
+### Prompt engineering y control de sesgos
+
+Si preguntan por el razonamiento del modelo:
+
+> El prompt utiliza reglas de dominio, ejemplos Few-shot e instrucciones
+> anti-sesgo. Pedimos al modelo que analice internamente el caso y devuelva una
+> justificación breve y auditable junto con la decisión estructurada.
+>
+> No mostramos un Chain-of-Thought interno completo ni afirmamos que exista un
+> agente ReAct literal. La salida visible es una explicación resumida que el
+> operador puede contrastar durante la revisión humana.
+
+Si preguntan por sesgos:
+
+> Hemos añadido reglas explícitas para impedir que género, raza, nacionalidad,
+> religión, orientación sexual, barrio o señales socioeconómicas irrelevantes
+> alteren la urgencia o clasificación. Además, el modelo debe basarse únicamente
+> en hechos presentes en el caso y reconocer incertidumbre cuando falte
+> información.
+
+Esto debe presentarse como una medida de mitigación, no como garantía de ausencia
+total de sesgo.
+
+---
+
 ## 5. Human Review — 1 minuto
 
 Modificar de forma deliberada un campo.

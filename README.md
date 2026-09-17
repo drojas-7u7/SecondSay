@@ -308,6 +308,31 @@ domain-profiles/insurance/
 
 El `PromptBuilder` utiliza esta configuración para construir el contexto que reciben los modelos.
 
+## Prompt engineering, explicabilidad y sesgos
+
+El prompt de SecondSay combina:
+
+* reglas del dominio;
+* ejemplos Few-shot;
+* instrucciones explícitas anti-sesgo;
+* taxonomías permitidas;
+* salida estructurada validada con Pydantic;
+* una justificación breve y auditable para el operador humano.
+
+Las reglas anti-sesgo evitan utilizar atributos personales protegidos, ubicación
+o señales socioeconómicas irrelevantes para modificar categoría, urgencia o
+departamento. También obligan a basar la decisión en la evidencia disponible y
+a reconocer incertidumbre en lugar de inventar información.
+
+SecondSay **no expone razonamiento interno paso a paso ni implementa actualmente
+un bucle ReAct literal `Thought → Action → Observation`**. El modelo realiza el
+análisis internamente y devuelve una justificación breve orientada a auditoría.
+
+Esta es una diferencia deliberada entre la implementación actual y la formulación
+literal del enunciado académico sobre Chain-of-Thought/ReAct. La interfaz muestra
+una explicación resumida y verificable, no el razonamiento interno completo del
+modelo.
+
 ## Estructura del repositorio
 
 ```text
