@@ -1,11 +1,11 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.core.database import get_db_session
-from app.providers.base import LLMProvider
+from app.providers.base import LLMProvider, LLMProviderError
 from app.providers.factory import build_llm_provider
 from app.repositories import CaseRepository
 from app.schemas.case import CaseCreate, CaseHistoryItem, CaseTriageResponse
@@ -81,7 +81,13 @@ def triage_case(
     ],
     session: Annotated[Session, Depends(get_db_session)],
 ) -> CaseTriageResponse:
-    result = triage_service.triage(case)
+    try:
+        result = triage_service.triage(case)
+    except LLMProviderError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="El proveedor LLM no pudo generar una decisión válida.",
+        ) from exc
 
     case_record, decision_record = CaseRepository().create_with_decision(
         session=session,

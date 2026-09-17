@@ -10,6 +10,7 @@ from app.api.cases import get_llm_provider
 from app.core.database import get_db_session
 from app.main import app
 from app.models import AIDecisionRecord, Base, CaseRecord
+from app.providers.base import LLMProviderError
 from app.providers.fake import FakeLLMProvider
 
 engine = create_engine(
@@ -95,6 +96,41 @@ def test_triage_case_endpoint_persists_case_and_decision() -> None:
         assert stored_decision is not None
         assert stored_decision.case_id == stored_case.id
         assert stored_decision.urgency == "MEDIA"
+
+
+def test_triage_case_returns_controlled_error_when_provider_fails() -> None:
+    class FailingLLMProvider(FakeLLMProvider):
+        def generate(self, prompt: str):
+            raise LLMProviderError("Invalid structured response.")
+
+    app.dependency_overrides[get_llm_provider] = FailingLLMProvider
+    app.dependency_overrides[get_db_session] = override_db_session
+
+    try:
+        response = client.post(
+            "/api/v1/cases/triage",
+            json={
+                "content": "Hay una fuga de agua en una vivienda asegurada.",
+                "input_type": "TEXT",
+                "domain_profile": "insurance",
+                "external_id": "ERROR-001",
+            },
+        )
+    finally:
+        app.dependency_overrides.pop(get_llm_provider, None)
+        app.dependency_overrides.pop(get_db_session, None)
+
+    assert response.status_code == 502
+    assert response.json() == {
+        "detail": "El proveedor LLM no pudo generar una decisión válida."
+    }
+
+    with session_factory() as session:
+        stored_case = session.scalar(
+            select(CaseRecord).where(CaseRecord.external_id == "ERROR-001")
+        )
+
+    assert stored_case is None
 
 
 def test_case_history_returns_decision_with_latest_audit() -> None:

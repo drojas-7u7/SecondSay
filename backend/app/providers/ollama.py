@@ -3,14 +3,14 @@ from time import perf_counter
 import httpx
 from pydantic import ValidationError
 
-from app.providers.base import LLMProvider
+from app.providers.base import LLMProvider, LLMProviderError
 from app.schemas.llm import LLMExecutionMetrics, LLMResult
 from app.schemas.triage import TriageDecision
 
 MAX_VALIDATION_ATTEMPTS = 2
 
 
-class OllamaProviderError(RuntimeError):
+class OllamaProviderError(LLMProviderError):
     """Raised when Ollama cannot produce a valid triage result."""
 
 

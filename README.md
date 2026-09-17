@@ -427,7 +427,7 @@ ruff check .
 Última validación local:
 
 ```text
-59 passed, 3 warnings
+60 passed, 3 warnings
 All checks passed!
 ```
 

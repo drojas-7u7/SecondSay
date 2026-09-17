@@ -3,7 +3,7 @@ from time import perf_counter, sleep
 
 import httpx
 
-from app.providers.base import LLMProvider
+from app.providers.base import LLMProvider, LLMProviderError
 from app.schemas.llm import LLMExecutionMetrics, LLMResult
 from app.schemas.triage import TriageDecision
 
@@ -19,7 +19,7 @@ BASE_BACKOFF_SECONDS = 0.5
 RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
 
 
-class GroqProviderError(RuntimeError):
+class GroqProviderError(LLMProviderError):
     """Raised when Groq cannot produce a valid triage result."""
 
 
