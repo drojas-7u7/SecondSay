@@ -1,6 +1,6 @@
-from typing import Annotated
+from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
@@ -15,8 +15,13 @@ from app.services.triage import TriageService
 router = APIRouter(prefix="/api/v1/cases", tags=["Casos"])
 
 
-def get_llm_provider() -> LLMProvider:
-    return build_llm_provider(get_settings())
+def get_llm_provider(
+    llm_mode: Annotated[
+        Literal["cloud", "local"] | None,
+        Query(description="Proveedor LLM a utilizar para esta petición."),
+    ] = None,
+) -> LLMProvider:
+    return build_llm_provider(get_settings(), mode=llm_mode)
 
 
 def get_triage_service(

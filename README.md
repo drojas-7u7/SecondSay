@@ -177,6 +177,21 @@ Cuando existen varias auditorías sobre una misma decisión, el histórico muest
 
 SecondSay permite demostrar un trade-off real entre infraestructura cloud y local.
 
+El operador puede seleccionar **Cloud · Groq** o **Local · Ollama** para cada
+ejecución desde la interfaz, sin reiniciar el backend.
+
+El dashboard agrega además los registros persistidos por proveedor/modelo para
+comparar:
+
+* número de ejecuciones;
+* latencia media;
+* coste medio de API;
+* decisiones revisadas;
+* tasa de discrepancia en decisiones revisadas como señal de alineación con la revisión humana.
+
+La tasa de discrepancia no representa por sí sola un error del modelo ni una
+métrica de accuracy.
+
 ### Groq
 
 Ventajas principales:
@@ -427,7 +442,7 @@ ruff check .
 Última validación local:
 
 ```text
-60 passed, 3 warnings
+62 passed, 3 warnings
 All checks passed!
 ```
 
@@ -446,8 +461,8 @@ Ambos comandos se encuentran actualmente validados sin errores.
 La versión actual permite demostrar de extremo a extremo:
 
 ```text
-Caso real
-→ IA cloud o local
+Caso
+→ selección Cloud · Groq o Local · Ollama
 → decisión estructurada
 → métricas
 → persistencia
@@ -486,7 +501,7 @@ Las siguientes capacidades forman parte de la evolución prevista y **no deben c
 * entrada multimodal basada en imágenes;
 * simulador de sistema externo;
 * detección automática de patrones;
-* dashboard analítico agregado;
+* analítica histórica avanzada;
 * Evaluation Lab para benchmarking automático entre modelos;
 * comparación simultánea cloud/local;
 * replay de casos históricos;

@@ -196,17 +196,34 @@ No afirmar que Pattern Detection ya existe.
 
 ## 8. Cloud vs local — 1 minuto
 
-Utilizar los registros ya existentes en el histórico.
+En el bloque **Nuevo caso**, señalar el selector:
 
-Mostrar una ejecución Groq y una Ollama.
+```text
+Cloud · Groq
+Local · Ollama
+```
+
+Si el tiempo de demo lo permite, ejecutar el mismo caso primero con Groq y
+después con Ollama. Si Ollama tarda demasiado, utilizar una ejecución local ya
+persistida en el histórico.
+
+Después señalar la sección **Cloud vs local**, que agrega por proveedor/modelo:
+
+* ejecuciones;
+* latencia media;
+* coste medio de API;
+* decisiones con revisión humana;
+* tasa de discrepancia en decisiones revisadas.
 
 ### Qué decir
 
-> SecondSay utiliza la misma arquitectura con dos estrategias reales de inferencia.
+> SecondSay utiliza la misma arquitectura con dos estrategias reales de inferencia y puedo elegir el proveedor para cada ejecución sin reiniciar el backend.
 >
 > Con Groq tenemos una ejecución cloud y una latencia cercana a un segundo en nuestras pruebas.
 >
 > Con Ollama ejecutamos `qwen3:4b-instruct` localmente. En nuestro hardware la latencia es mayor, pero obtenemos más control sobre dónde se procesan los datos y no existe coste directo de API.
+
+> El histórico permite comparar ambos proveedores. La tasa de discrepancia es una señal de alineación con la revisión humana, no una métrica automática de error o accuracy.
 
 Señalar en la interfaz:
 
@@ -220,7 +237,7 @@ Sin coste de API
 
 ### Mensaje comercial
 
-> La decisión no siempre es qué modelo es más rápido, sino qué combinación de privacidad, control, coste y latencia encaja mejor en cada flujo.
+> La decisión no siempre es qué modelo es más rápido, sino qué combinación de privacidad, control, coste, latencia y comportamiento observado encaja mejor en cada flujo.
 
 ---
 

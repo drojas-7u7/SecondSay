@@ -98,6 +98,37 @@ def test_triage_case_endpoint_persists_case_and_decision() -> None:
         assert stored_decision.urgency == "MEDIA"
 
 
+
+def test_triage_case_accepts_llm_mode_selector() -> None:
+    selected_mode: dict[str, str | None] = {}
+
+    def override_llm_provider(
+        llm_mode: str | None = None,
+    ) -> FakeLLMProvider:
+        selected_mode["value"] = llm_mode
+        return FakeLLMProvider()
+
+    app.dependency_overrides[get_llm_provider] = override_llm_provider
+    app.dependency_overrides[get_db_session] = override_db_session
+
+    try:
+        response = client.post(
+            "/api/v1/cases/triage?llm_mode=local",
+            json={
+                "content": "Hay una fuga de agua en una vivienda asegurada.",
+                "input_type": "TEXT",
+                "domain_profile": "insurance",
+                "external_id": "MODE-001",
+            },
+        )
+    finally:
+        app.dependency_overrides.pop(get_llm_provider, None)
+        app.dependency_overrides.pop(get_db_session, None)
+
+    assert response.status_code == 200
+    assert selected_mode["value"] == "local"
+
+
 def test_triage_case_returns_controlled_error_when_provider_fails() -> None:
     class FailingLLMProvider(FakeLLMProvider):
         def generate(self, prompt: str):

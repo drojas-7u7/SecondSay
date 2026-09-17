@@ -44,6 +44,22 @@ def test_provider_factory_builds_groq_provider() -> None:
     assert provider.model == "openai/gpt-oss-20b"
 
 
+def test_provider_factory_allows_mode_override() -> None:
+    settings = Settings(
+        llm_mode="local",
+        cloud_llm_provider="groq",
+        cloud_llm_api_key=SecretStr("test-key"),
+        cloud_llm_model="openai/gpt-oss-20b",
+        local_llm_provider="ollama",
+        local_llm_model="qwen3:4b-instruct",
+        local_llm_base_url="http://127.0.0.1:11434",
+    )
+
+    provider = build_llm_provider(settings, mode="cloud")
+
+    assert isinstance(provider, GroqProvider)
+
+
 def test_provider_factory_rejects_unknown_provider() -> None:
     settings = Settings(
         cloud_llm_provider="unknown",

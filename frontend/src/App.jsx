@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import './App.css'
 
 const urgencyOptions = ['BAJA', 'MEDIA', 'ALTA', 'CRÍTICA']
@@ -16,6 +16,7 @@ async function fetchHistory() {
 
 function App() {
   const [content, setContent] = useState('')
+  const [llmMode, setLlmMode] = useState('cloud')
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -79,6 +80,47 @@ function App() {
       finalUrgency !== result.decision.urgency ||
       finalDepartment.trim() !== result.decision.department)
 
+  const providerComparison = useMemo(() => {
+    const grouped = new Map()
+
+    history.forEach((item) => {
+      const key = `${item.provider}:${item.model}`
+      const current = grouped.get(key) || {
+        provider: item.provider,
+        model: item.model,
+        runs: 0,
+        totalLatencyMs: 0,
+        totalEstimatedCost: 0,
+        reviewed: 0,
+        discrepancies: 0,
+      }
+
+      current.runs += 1
+      current.totalLatencyMs += item.latency_ms
+      current.totalEstimatedCost += item.estimated_cost
+
+      if (item.has_discrepancy !== null) {
+        current.reviewed += 1
+
+        if (item.has_discrepancy) {
+          current.discrepancies += 1
+        }
+      }
+
+      grouped.set(key, current)
+    })
+
+    return Array.from(grouped.values()).map((item) => ({
+      ...item,
+      averageLatencyMs: item.totalLatencyMs / item.runs,
+      averageEstimatedCost: item.totalEstimatedCost / item.runs,
+      discrepancyRate:
+        item.reviewed > 0
+          ? (item.discrepancies / item.reviewed) * 100
+          : null,
+    }))
+  }, [history])
+
   async function handleSubmit(event) {
     event.preventDefault()
 
@@ -94,13 +136,16 @@ function App() {
     setAuditError('')
 
     try {
-      const response = await fetch('/api/v1/cases/triage', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `/api/v1/cases/triage?llm_mode=${llmMode}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ content: content.trim() }),
         },
-        body: JSON.stringify({ content: content.trim() }),
-      })
+      )
 
       if (!response.ok) {
         throw new Error('No se pudo analizar el caso.')
@@ -217,6 +262,21 @@ function App() {
               placeholder="Ej. Se ha roto una tubería en la cocina y el agua está llegando al piso inferior."
               rows="8"
             />
+
+            <label htmlFor="llm-mode">Proveedor de IA</label>
+            <select
+              id="llm-mode"
+              value={llmMode}
+              onChange={(event) => setLlmMode(event.target.value)}
+              disabled={isLoading}
+            >
+              <option value="cloud">Cloud · Groq</option>
+              <option value="local">Local · Ollama</option>
+            </select>
+            <p className="field-help">
+              Cambia de proveedor para comparar el mismo caso sin reiniciar
+              SecondSay.
+            </p>
 
             {error && <p className="error-message">{error}</p>}
 
@@ -452,6 +512,104 @@ function App() {
           </div>
         </section>
       )}
+
+      <section className="comparison-section">
+        <div className="panel">
+          <div className="history-heading">
+            <div>
+              <p className="eyebrow">Comparativa multi-proveedor</p>
+              <h2>Cloud vs local</h2>
+              <p>
+                Compara ejecución, coste de API y una señal de calidad basada
+                en la revisión humana.
+              </p>
+            </div>
+          </div>
+
+          {providerComparison.length === 0 ? (
+            <div className="history-state">
+              <p>
+                Ejecuta casos con Groq y Ollama para construir la comparativa.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="history-table-wrapper">
+                <table className="history-table comparison-table">
+                  <thead>
+                    <tr>
+                      <th>Proveedor / modelo</th>
+                      <th>Ejecuciones</th>
+                      <th>Latencia media</th>
+                      <th>Coste medio de API</th>
+                      <th>Señal de calidad</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {providerComparison.map((item) => (
+                      <tr key={`${item.provider}:${item.model}`}>
+                        <td>
+                          <strong>{item.provider}</strong>
+                          <small>{item.model}</small>
+                        </td>
+                        <td>
+                          <strong>{item.runs}</strong>
+                          <small>
+                            {item.reviewed} con revisión humana
+                          </small>
+                        </td>
+                        <td>
+                          <strong>
+                            {Math.round(item.averageLatencyMs)} ms
+                          </strong>
+                        </td>
+                        <td>
+                          <strong>
+                            {item.provider === 'ollama'
+                              ? 'Sin coste de API'
+                              : `$${item.averageEstimatedCost.toFixed(6)}`}
+                          </strong>
+                          {item.provider === 'ollama' && (
+                            <small>
+                              No incluye hardware ni consumo energético
+                            </small>
+                          )}
+                        </td>
+                        <td>
+                          {item.discrepancyRate === null ? (
+                            <>
+                              <strong>Sin datos suficientes</strong>
+                              <small>
+                                Requiere al menos una revisión humana
+                              </small>
+                            </>
+                          ) : (
+                            <>
+                              <strong>
+                                {item.discrepancyRate.toFixed(0)}% discrepancia
+                              </strong>
+                              <small>
+                                {item.discrepancies} de {item.reviewed}{' '}
+                                decisiones revisadas
+                              </small>
+                            </>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <p className="comparison-note">
+                La tasa de discrepancia mide diferencias entre la propuesta de
+                IA y la decisión humana final. No representa por sí sola un
+                error del modelo ni una métrica de accuracy.
+              </p>
+            </>
+          )}
+        </div>
+      </section>
 
       <section className="history-section">
         <div className="panel">

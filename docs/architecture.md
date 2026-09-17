@@ -276,9 +276,17 @@ Ollama
 → mayor latencia en el hardware actual
 ```
 
-La selección se realiza actualmente mediante configuración del backend.
+La interfaz permite seleccionar `cloud` o `local` para cada ejecución.
 
-No existe todavía un selector dinámico en la interfaz.
+El endpoint de triaje acepta el parámetro opcional:
+
+```text
+llm_mode=cloud|local
+````
+
+Si no se especifica, se conserva como fallback el modo configurado en el backend.
+La construcción concreta del proveedor continúa centralizada en `LLMProvider` y
+su factoría.
 
 ## Decisiones de arquitectura
 
@@ -333,7 +341,9 @@ Esto evita que el cliente pueda sustituir la decisión IA que se pretende audita
 * React;
 * histórico;
 * métricas;
-* cloud/local.
+* selector cloud/local por ejecución;
+
+* comparativa histórica básica por proveedor/modelo.
 
 ### No implementado todavía
 

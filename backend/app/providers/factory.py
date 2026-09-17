@@ -5,10 +5,13 @@ from app.providers.groq import GroqProvider
 from app.providers.ollama import OllamaProvider
 
 
-def build_llm_provider(settings: Settings) -> LLMProvider:
-    mode = settings.llm_mode.strip().lower()
+def build_llm_provider(
+    settings: Settings,
+    mode: str | None = None,
+) -> LLMProvider:
+    resolved_mode = (mode or settings.llm_mode).strip().lower()
 
-    if mode == "local":
+    if resolved_mode == "local":
         provider_name = settings.local_llm_provider.strip().lower()
 
         if provider_name == "ollama":
@@ -21,8 +24,8 @@ def build_llm_provider(settings: Settings) -> LLMProvider:
             f"Unsupported local LLM provider: {settings.local_llm_provider}"
         )
 
-    if mode != "cloud":
-        raise ValueError(f"Unsupported LLM mode: {settings.llm_mode}")
+    if resolved_mode != "cloud":
+        raise ValueError(f"Unsupported LLM mode: {resolved_mode}")
 
     provider_name = settings.cloud_llm_provider.strip().lower()
 
