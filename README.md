@@ -459,6 +459,26 @@ Caso real
 
 Esto convierte a SecondSay en algo distinto de una simple aplicación que llama a un chatbot: la propuesta central es una capa de **AI Quality, Human-in-the-loop y AI Governance operacional**.
 
+## Evidencias visuales
+
+### Flujo de auditoría
+
+Decisión estructurada de IA, revisión humana y resultado de auditoría:
+
+![Flujo de auditoría de SecondSay](docs/screenshots/02-audit-workflow.png)
+
+### Histórico de auditoría
+
+Persistencia de decisiones, proveedores, modelos, latencias, coste y discrepancias:
+
+![Histórico de auditoría de SecondSay](docs/screenshots/01-audit-history.png)
+
+### Arquitectura
+
+Vista general de la arquitectura modular de SecondSay:
+
+![Arquitectura de SecondSay](docs/screenshots/03-architecture.png)
+
 ## Roadmap
 
 Las siguientes capacidades forman parte de la evolución prevista y **no deben considerarse implementadas actualmente**:
