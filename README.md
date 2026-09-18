@@ -526,6 +526,13 @@ y discrepancia observada tras revisión humana:
 
 ![Comparativa cloud vs local de SecondSay](docs/screenshots/04-cloud-local-comparison.png)
 
+## Demo en vídeo
+
+La demo completa del MVP está disponible en la release `v1.0.0`:
+
+[Ver SecondSay MVP Demo](https://github.com/drojas-7u7/SecondSay/releases/tag/v1.0.0)
+
+El vídeo muestra el flujo end-to-end de SecondSay: clasificación estructurada con IA, selección Cloud/Local, Human Review, Audit Engine, histórico y comparación de proveedores.
 
 ## Roadmap
 
