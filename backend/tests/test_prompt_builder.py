@@ -27,6 +27,10 @@ def test_prompt_builder_includes_domain_configuration() -> None:
     assert "EJEMPLOS FEW-SHOT" in prompt
     assert "Fuga de agua causa daños propios y a terceros afectados" in prompt
 
+    assert "CHAIN-OF-THOUGHT / COT" in prompt
+    assert "analiza internamente paso a paso" in prompt
+    assert "No expongas la cadena de razonamiento completa" in prompt
+
     assert "category" in prompt
     assert "urgency" in prompt
     assert "summary" in prompt

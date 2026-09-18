@@ -324,14 +324,17 @@ o señales socioeconómicas irrelevantes para modificar categoría, urgencia o
 departamento. También obligan a basar la decisión en la evidencia disponible y
 a reconocer incertidumbre en lugar de inventar información.
 
-SecondSay **no expone razonamiento interno paso a paso ni implementa actualmente
-un bucle ReAct literal `Thought → Action → Observation`**. El modelo realiza el
-análisis internamente y devuelve una justificación breve orientada a auditoría.
+El prompt incluye una instrucción explícita de **Chain-of-Thought (CoT)** para
+que el modelo analice internamente paso a paso los hechos relevantes antes de
+generar la decisión estructurada.
 
-Esta es una diferencia deliberada entre la implementación actual y la formulación
-literal del enunciado académico sobre Chain-of-Thought/ReAct. La interfaz muestra
-una explicación resumida y verificable, no el razonamiento interno completo del
-modelo.
+SecondSay **no expone la cadena de razonamiento interna completa**. La interfaz
+muestra únicamente una justificación breve y auditable con los factores
+determinantes de la decisión.
+
+SecondSay **no implementa actualmente un agente ReAct literal**
+`Thought → Action → Observation`. Esta sigue siendo una diferencia respecto a la
+formulación inicial del enunciado académico.
 
 ## Estructura del repositorio
 

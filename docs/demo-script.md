@@ -108,13 +108,14 @@ Señalar también el UUID de la decisión.
 
 Si preguntan por el razonamiento del modelo:
 
-> El prompt utiliza reglas de dominio, ejemplos Few-shot e instrucciones
-> anti-sesgo. Pedimos al modelo que analice internamente el caso y devuelva una
-> justificación breve y auditable junto con la decisión estructurada.
+> El prompt utiliza reglas de dominio, ejemplos Few-shot, instrucciones
+> anti-sesgo y una instrucción explícita de Chain-of-Thought para analizar
+> internamente paso a paso los hechos relevantes antes de generar la decisión.
 >
-> No mostramos un Chain-of-Thought interno completo ni afirmamos que exista un
-> agente ReAct literal. La salida visible es una explicación resumida que el
-> operador puede contrastar durante la revisión humana.
+> No exponemos la cadena de razonamiento interna completa. Mostramos únicamente
+> una justificación breve y auditable que el operador puede contrastar durante
+> la revisión humana. Tampoco afirmamos que exista un agente ReAct literal,
+> porque SecondSay no implementa actualmente ese ciclo.
 
 Si preguntan por sesgos:
 
